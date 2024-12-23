@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Tables Management</title>
     <link rel="stylesheet" href="{% static 'css/dashboard/styles.css' %}">
 </head>
 <body>
@@ -19,11 +19,23 @@
         </div>
     </nav>
     <div class="dashboard-container">
-        <h2>Dashboard</h2>
-        <p>Welcome to your dashboard. Here you can manage your orders and view statistics.</p>
-        <div class="widget">
-            <h3>Random Widget</h3>
-            <p>This is a placeholder for a future widget or data element.</p>
+        <h2>Manage Tables</h2>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Add Table</button>
+        </form>
+        <div class="table-list">
+            <h3>Existing Tables</h3>
+            <ul>
+                {% for table in tables %}
+                    <li>
+                        <strong>Table ID: {{ table.id }}</strong>
+                        <br>
+                        <img src="{{ table.qr_code.url }}" alt="QR Code for Table {{ table.id }}">
+                    </li>
+                {% endfor %}
+            </ul>
         </div>
     </div>
 </body>
