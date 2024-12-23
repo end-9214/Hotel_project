@@ -64,11 +64,11 @@ body {
 }
 
 /* Form Styles */
-form {
+.create-table-form {
   margin-bottom: 20px;
 }
 
-form button {
+.create-table-form button {
   background-color: #333;
   color: white;
   padding: 10px 20px;
@@ -78,7 +78,7 @@ form button {
   transition: background-color 0.3s;
 }
 
-form button:hover {
+.create-table-form button:hover {
   background-color: #575757;
 }
 
@@ -87,20 +87,21 @@ form button:hover {
   margin-top: 20px;
 }
 
-.table-list ul {
-  list-style-type: none;
-  padding: 0;
+.table-list table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.table-list li {
-  background-color: #fafafa;
-  border: 1px solid #e0e0e0;
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 10px;
+.table-list th, .table-list td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.table-list th {
+  background-color: #f2f2f2;
 }
 
 .table-list img {
-  margin-top: 10px;
   max-width: 100px;
 }

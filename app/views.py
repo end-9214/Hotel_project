@@ -1,8 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render,get_object_or_404, redirect
 from django.http import HttpResponse
+from django.http import JsonResponse
 from .models import Table
 from .forms import TableForm
 from django.contrib.auth import authenticate, login
+import os
 
 
 # Create your views here.
@@ -36,3 +38,15 @@ def tables(request):
         form = TableForm()
     tables = Table.objects.all()
     return render(request, 'tables.html', {'form': form, 'tables': tables})
+
+def delete_table(request, id):
+    if request.method == 'POST':
+        table = get_object_or_404(Table, id=id)
+        qr_code_path = table.qr_code.path if table.qr_code else None
+        table.delete()
+        if qr_code_path and os.path.exists(qr_code_path):
+            os.remove(qr_code_path)
+        else:
+            print(f"The file {qr_code_path} does not exist")
+        return redirect('tables')
+    return JsonResponse({'error': 'Invalid request'}, status=400)
