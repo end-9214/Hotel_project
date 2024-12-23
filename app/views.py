@@ -4,13 +4,14 @@ from django.http import JsonResponse
 from .models import Table
 from .forms import TableForm
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 import os
 
 
 # Create your views here.
 
-def client_login(request):
-    return render(request, 'client_login.html')
+def customer_login(request):
+    return render(request, 'customer_login.html')
 
 def user_login(request):
     if request.method == 'POST':
@@ -25,9 +26,11 @@ def user_login(request):
 
     return render(request, 'login.html')
 
+@login_required
 def dashboard(request):
     return render(request, 'dashboard.html')
 
+@login_required
 def tables(request):
     if request.method == 'POST':
         form = TableForm(request.POST)
@@ -39,6 +42,7 @@ def tables(request):
     tables = Table.objects.all()
     return render(request, 'tables.html', {'form': form, 'tables': tables})
 
+@login_required
 def delete_table(request, id):
     if request.method == 'POST':
         table = get_object_or_404(Table, id=id)
