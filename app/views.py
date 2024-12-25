@@ -54,3 +54,12 @@ def delete_table(request, id):
             print(f"The file {qr_code_path} does not exist")
         return redirect('tables')
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+    
+def table_details(request,id):
+    if request.method == 'POST':
+            table = get_object_or_404(Table, id=id)
+            Orders = get_object_or_404(Orders,table)
+
+    return render(request, 'table_details.html', {'orders': Orders})

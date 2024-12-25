@@ -12,6 +12,7 @@ urlpatterns = [
     path('tables/', tables, name='tables'),
     path('delete/<uuid:id>/', delete_table, name='delete_table'),
     path('logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),
+    path('tables/table_details/<uuid:id>', table_details, name = 'table_details')
 ]
 
 if settings.DEBUG:

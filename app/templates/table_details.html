@@ -67,115 +67,12 @@
 
     <!-- Main Content -->
     <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Manage Tables</h2>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTableModal">
-                <i class="fas fa-plus"></i> Create New Table
-            </button>
-        </div>
-
-        <!-- Modal for Adding New Table -->
-        <div class="modal fade" id="addTableModal" tabindex="-1" aria-labelledby="addTableModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addTableModalLabel">Create New Table</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form method="POST">
-                            {% csrf_token %}
-                            {{ form.as_p }}
-                            <div class="d-flex justify-content-end">
-                                <button type="submit" class="btn btn-primary">Create</button>
-                                <button type="button" class="btn btn-secondary ms-2" data-bs-dismiss="modal">Cancel</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Existing Tables List -->
-        <div class="table-responsive">
-            <h3 class="mb-3">Existing Tables</h3>
-            <table class="table table-striped table-hover table-bordered">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Table ID</th>
-                        <th>QR Code</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for table in tables %}
-                        <tr>
-                            
-                            <td>{{ table.id }}</td>
-                            <td>
-                                <img id="qr_{{ table.id }}" src="{{ table.qr_code.url }}" alt="QR Code for Table {{ table.id }}" class="img-fluid" style="max-width: 100px;">
-                            </td>
-                            <td>
-                                <button class="btn btn-primary btn-sm" type="button" href="{% url 'table_details' table.id %}">
-                                    <i class="fas fa-clipboard-list"></i> Table Details
-                                </button>
-                                <!-- Print Button -->
-                                <button class="btn btn-success btn-sm" type="button" onclick="downloadQRCode('{{ table.id }}')">
-                                    <i class="fas fa-print"></i> Print
-                                </button>
-
-                                <!-- Delete Button -->
-                                <button class="btn btn-danger btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#deleteTableModal{{ table.id }}">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </td>
-
-                        </tr>
-
-                        <!-- Modal for Delete Confirmation -->
-                        <div class="modal fade" id="deleteTableModal{{ table.id }}" tabindex="-1" aria-labelledby="deleteTableModalLabel{{ table.id }}" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="deleteTableModalLabel{{ table.id }}">Delete Table</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form method="POST" action="{% url 'delete_table' table.id %}">
-                                            {% csrf_token %}
-                                            <p>Are you sure you want to delete this table?</p>
-                                            <div class="d-flex justify-content-end">
-                                                <button type="submit" class="btn btn-danger">Delete</button>
-                                                <button type="button" class="btn btn-secondary ms-2" data-bs-dismiss="modal">Cancel</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% empty %}
-                        <tr>
-                            <td colspan="3" class="text-center">No tables found.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+            <h1> Here table details will be shown. </h1>
     </div>
 
     <!-- Add Bootstrap JS and dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Add custom JS for downloading QR codes -->
-    <script>
-        function downloadQRCode(tableId) {
-            const qrCodeImg = document.getElementById(`qr_${tableId}`);
-            const link = document.createElement('a');
-            link.href = qrCodeImg.src;
-            link.download = `Table_${tableId}_QR.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-    </script>
+
 </body>
 </html>
