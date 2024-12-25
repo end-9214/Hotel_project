@@ -116,9 +116,9 @@
                                 <img id="qr_{{ table.id }}" src="{{ table.qr_code.url }}" alt="QR Code for Table {{ table.id }}" class="img-fluid" style="max-width: 100px;">
                             </td>
                             <td>
-                                <button class="btn btn-primary btn-sm" type="button" href="{% url 'table_details' table.id %}">
+                                <a class="btn btn-primary btn-sm" href="{% url 'table_details' table.id %}">
                                     <i class="fas fa-clipboard-list"></i> Table Details
-                                </button>
+                                </a>
                                 <!-- Print Button -->
                                 <button class="btn btn-success btn-sm" type="button" onclick="downloadQRCode('{{ table.id }}')">
                                     <i class="fas fa-print"></i> Print

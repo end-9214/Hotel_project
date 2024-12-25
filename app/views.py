@@ -60,6 +60,7 @@ def delete_table(request, id):
 def table_details(request,id):
     if request.method == 'POST':
             table = get_object_or_404(Table, id=id)
-            Orders = get_object_or_404(Orders,table)
+            orders = Orders.objects.filter(table=table)
+                
 
-    return render(request, 'table_details.html', {'orders': Orders})
+    return render(request, 'table_details.html', {'orders': orders})
