@@ -1,8 +1,8 @@
 from django.shortcuts import render,get_object_or_404, redirect
 from django.http import HttpResponse
 from django.http import JsonResponse
-from .models import Table
-from .forms import TableForm
+from .models import *
+from .forms import *
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 import os
@@ -60,7 +60,7 @@ def delete_table(request, id):
 def table_details(request,id):
     if request.method == 'POST':
             table = get_object_or_404(Table, id=id)
-            orders = Orders.objects.filter(table=table)
+            orders = Order.objects.filter(table=table)
                 
 
     return render(request, 'table_details.html', {'orders': orders})
