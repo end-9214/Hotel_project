@@ -61,6 +61,7 @@ def table_details(request,id):
     if request.method == 'POST':
             table = get_object_or_404(Table, id=id)
             orders = Order.objects.filter(table=table)
+            order_items = OrderItem.objects.all()
                 
 
-    return render(request, 'table_details.html', {'orders': orders})
+    return render(request, 'table_details.html', {'orders': orders, 'order_items': order_items})
