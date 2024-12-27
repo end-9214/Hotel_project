@@ -1,24 +1,26 @@
-from django.shortcuts import render,get_object_or_404, redirect
-from django.http import HttpResponse
-from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse, JsonResponse
 from .models import *
 from .forms import *
-from django.contrib.auth import authenticate, login as auth_login
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import check_password, make_password
 import os
+import logging
 
-
-# Create your views here.
+logger = logging.getLogger(__name__)
 
 def customer_login(request):
     if request.method == 'POST':
         username = request.POST.get("username")
         password = request.POST.get("password")
         try:
-            customer = Customer.objects.get(username = username)
-            if customer.password == password:
-                auth_login(request, customer)
-                return redirect('customer_main')
+            customer = Customer.objects.get(username=username)
+            if check_password(password, customer.password):
+                request.session['customer_id'] = customer.id
+                request.session['customer_role'] = customer.role
+                if customer.role == 'Admin':
+                    return redirect('dashboard')
+                else:
+                    return redirect('customer_main')
             else:
                 return HttpResponse("Invalid credentials")
         except Customer.DoesNotExist:
@@ -26,24 +28,9 @@ def customer_login(request):
 
     return render(request, 'customer_login.html')
 
-def user_login(request):
-    if request.method == 'POST':
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            auth_login(request, user)
-            return render(request, 'dashboard.html')
-        else:
-            return HttpResponse("Invalid login")
-
-    return render(request, 'login.html')
-
-@login_required
 def dashboard(request):
     return render(request, 'dashboard.html')
 
-@login_required
 def tables(request):
     if request.method == 'POST':
         form = TableForm(request.POST)
@@ -55,7 +42,6 @@ def tables(request):
     tables = Table.objects.all()
     return render(request, 'tables.html', {'form': form, 'tables': tables})
 
-@login_required
 def delete_table(request, id):
     if request.method == 'POST':
         table = get_object_or_404(Table, id=id)
@@ -64,23 +50,16 @@ def delete_table(request, id):
         if qr_code_path and os.path.exists(qr_code_path):
             os.remove(qr_code_path)
         else:
-            print(f"The file {qr_code_path} does not exist")
+            logger.warning(f"The file {qr_code_path} does not exist")
         return redirect('tables')
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
-
-    
-def table_details(request,id):
-    if request.method == 'POST':
-            table = get_object_or_404(Table, id=id)
-            orders = Order.objects.filter(table=table)
-            order_items = OrderItem.objects.all()
-                
-
+def table_details(request, id):
+    table = get_object_or_404(Table, id=id)
+    orders = Order.objects.filter(table=table)
+    order_items = OrderItem.objects.filter(order__in=orders)
     return render(request, 'table_details.html', {'orders': orders, 'order_items': order_items})
 
-
-@login_required
 def menu(request):
     if request.method == 'POST':
         form = ItemForm(request.POST, request.FILES)
@@ -89,18 +68,17 @@ def menu(request):
             return redirect('menu')
     else:
         form = ItemForm()
-    
     items = Items.objects.all()
     return render(request, 'menu.html', {'form': form, 'items': items})
 
-@login_required
 def customer_main(request):
     if request.method == 'POST':
         item_id = request.POST.get('item_id')
         quantity = int(request.POST.get('quantity', 1))
-        item = Items.objects.get(id=item_id)
+        item = Items.objects.get(item_id=item_id)
 
-        order, created = Order.objects.get_or_create(customer_name=request.user.username, table=None)
+        table = Table.objects.first()  # Replace with appropriate logic
+        order, created = Order.objects.get_or_create(customer_name=request.user.username, table=table)
 
         order_item, created = OrderItem.objects.get_or_create(order=order, item=item, defaults={'quantity': quantity})
         if not created:

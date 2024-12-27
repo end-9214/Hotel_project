@@ -7,11 +7,14 @@ import uuid
 # Create your models here.
 
 class Customer(models.Model):
-    username = models.CharField(max_length=100)
+    ROLES = [
+        ('Customer', 'Customer'),
+        ('Admin', 'Admin'),
+    ]
+    username = models.CharField(max_length=100, unique=True)
     password = models.CharField(max_length=100)
-    email = models.EmailField()
-    phone = models.CharField(max_length=15)
-    address = models.TextField()
+    role = models.CharField(max_length=100, choices=ROLES, default='Customer')
+    phone = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
