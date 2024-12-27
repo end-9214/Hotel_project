@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from .models import *
 from .forms import *
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
 import os
 
@@ -14,11 +14,15 @@ def customer_login(request):
     if request.method == 'POST':
         username = request.POST.get("username")
         password = request.POST.get("password")
-        user = Customer.objects.filter(username=username, password=password).first()
-        
-        if user is not None:
-            login(request, user)
-            return render(request, 'customer_main.html')
+        try:
+            customer = Customer.objects.get(username = username)
+            if customer.password == password:
+                auth_login(request, customer)
+                return redirect('customer_main')
+            else:
+                return HttpResponse("Invalid credentials")
+        except Customer.DoesNotExist:
+            return HttpResponse("User does not exist")
 
     return render(request, 'customer_login.html')
 
@@ -28,7 +32,7 @@ def user_login(request):
         password = request.POST.get("password")
         user = authenticate(request, username=username, password=password)
         if user is not None:
-            login(request, user)
+            auth_login(request, user)
             return render(request, 'dashboard.html')
         else:
             return HttpResponse("Invalid login")
