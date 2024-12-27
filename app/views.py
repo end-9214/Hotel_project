@@ -11,6 +11,15 @@ import os
 # Create your views here.
 
 def customer_login(request):
+    if request.method == 'POST':
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        user = Customer.objects.filter(username=username, password=password).first()
+        
+        if user is not None:
+            login(request, user)
+            return render(request, 'customer_main.html')
+
     return render(request, 'customer_login.html')
 
 def user_login(request):
@@ -65,3 +74,36 @@ def table_details(request,id):
                 
 
     return render(request, 'table_details.html', {'orders': orders, 'order_items': order_items})
+
+
+@login_required
+def menu(request):
+    if request.method == 'POST':
+        form = ItemForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('menu')
+    else:
+        form = ItemForm()
+    
+    items = Items.objects.all()
+    return render(request, 'menu.html', {'form': form, 'items': items})
+
+@login_required
+def customer_main(request):
+    if request.method == 'POST':
+        item_id = request.POST.get('item_id')
+        quantity = int(request.POST.get('quantity', 1))
+        item = Items.objects.get(id=item_id)
+
+        order, created = Order.objects.get_or_create(customer_name=request.user.username, table=None)
+
+        order_item, created = OrderItem.objects.get_or_create(order=order, item=item, defaults={'quantity': quantity})
+        if not created:
+            order_item.quantity += quantity
+            order_item.save()
+
+        return redirect('customer_main')
+
+    items = Items.objects.all()
+    return render(request, 'customer_main.html', {'items': items})
