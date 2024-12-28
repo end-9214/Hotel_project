@@ -5,6 +5,7 @@ from .forms import *
 from django.contrib.auth.hashers import check_password, make_password
 import os
 import logging
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,33 @@ def customer_login(request):
             return HttpResponse("User does not exist")
 
     return render(request, 'customer_login.html')
+
+def qr_code_login(request):
+    table_id = request.GET.get('table_id')
+    if table_id:
+        table = Table.objects.get(id=table_id)
+        request.session['table_id'] = table_id  # Store table_id in session for later use
+
+    if request.method == 'POST':
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        try:
+            customer = Customer.objects.get(username=username)
+            if check_password(password, customer.password):                
+                # Record the scan information
+                if 'table_id' in request.session:
+                    ScanRecord.objects.create(
+                        customer=customer,
+                        table=table,
+                        scanned_at=timezone.now()
+                    )
+                return redirect('customer_main')
+            else:
+                return HttpResponse("Invalid credentials")
+        except Customer.DoesNotExist:
+            return HttpResponse("User does not exist")
+
+    return render(request, 'qr_code_login.html')
 
 def dashboard(request):
     return render(request, 'dashboard.html')

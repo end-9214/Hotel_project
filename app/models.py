@@ -3,7 +3,8 @@ import qrcode
 from io import BytesIO
 from django.core.files import File
 import uuid
-
+from django.conf import settings
+from django.urls import reverse
 # Create your models here.
 
 class Customer(models.Model):
@@ -23,7 +24,8 @@ class Table(models.Model):
     qr_code = models.ImageField(upload_to='qr_codes', blank=True)
 
     def save(self, *args, **kwargs):
-        qrcode_img = qrcode.make(f'Table ID: {self.id}')
+        url = f"{settings.BASE_URL}{reverse('qr_code_login')}?table_id={self.id}"
+        qrcode_img = qrcode.make(url)
         canvas = BytesIO()
         qrcode_img.save(canvas, format='PNG')
         canvas.seek(0)
@@ -52,6 +54,14 @@ class Order(models.Model):
     customer_name = models.CharField(max_length=100)
     order_items = models.ManyToManyField('OrderItem')
     table = models.ForeignKey(Table, on_delete=models.CASCADE)
+
+class ScanRecord(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    table = models.ForeignKey(Table, on_delete=models.CASCADE)
+    scanned_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.customer.username} scanned at {self.table.id} on {self.scanned_at}"
     
 
 
