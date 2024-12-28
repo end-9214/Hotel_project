@@ -30,9 +30,10 @@ def customer_login(request):
     return render(request, 'customer_login.html')
 
 def qr_code_login(request):
+    table = None
     table_id = request.GET.get('table_id')
     if table_id:
-        table = Table.objects.get(id=table_id)
+        table = get_object_or_404(Table, id=table_id)
         request.session['table_id'] = table_id  # Store table_id in session for later use
 
     if request.method == 'POST':
@@ -40,9 +41,13 @@ def qr_code_login(request):
         password = request.POST.get("password")
         try:
             customer = Customer.objects.get(username=username)
-            if check_password(password, customer.password):                
+            if check_password(password, customer.password):
+                request.session['customer_id'] = customer.id
+                request.session['customer_role'] = customer.role
                 # Record the scan information
                 if 'table_id' in request.session:
+                    table_id = request.session['table_id']
+                    table = get_object_or_404(Table, id=table_id)
                     ScanRecord.objects.create(
                         customer=customer,
                         table=table,
@@ -86,7 +91,6 @@ def table_details(request, id):
     table = get_object_or_404(Table, id=id)
     orders = Order.objects.filter(table=table).prefetch_related('order_items__item')  # Optimize queries
     return render(request, 'table_details.html', {'orders': orders})
-
 
 def menu(request):
     if request.method == 'POST':
