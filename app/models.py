@@ -31,11 +31,6 @@ class Table(models.Model):
         canvas.close()
         super().save(*args, **kwargs)
 
-class Order(models.Model):
-    customer_name = models.CharField(max_length=100)
-    order_items = models.ManyToManyField('OrderItem')
-    table = models.ForeignKey(Table, on_delete=models.CASCADE)
-
 class Items(models.Model):
     item_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
@@ -45,8 +40,19 @@ class Items(models.Model):
 
     def __str__(self):
         return self.name
-
+    
 class OrderItem(models.Model):
     quantity = models.IntegerField()
     item = models.ForeignKey('Items', on_delete=models.CASCADE, null=True, blank=True)
+    @property
+    def price(self):
+        return self.item.price if self.item else 0
+    
+class Order(models.Model):
+    customer_name = models.CharField(max_length=100)
+    order_items = models.ManyToManyField('OrderItem')
+    table = models.ForeignKey(Table, on_delete=models.CASCADE)
+    
+
+
     

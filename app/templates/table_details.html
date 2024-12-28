@@ -1,4 +1,4 @@
-{% load static %}
+{% load static custom_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -60,13 +60,14 @@
                             <td>
                                 <ul>
                                     {% for item in order.order_items.all %}
-                                        <li>{{ item.name }} (x{{ item.quantity }}) - ${{ item.price }}</li>
+                                        <li>{{ item.name }} (x{{ item.quantity }}) - ₹{{ item.price }}</li>
                                     {% endfor %}
                                 </ul>
                             </td>
                             <td>
-                                ${{ order.order_items.all|map:'price'|sum }}
+                                ₹{{ order.order_items.all|total_price }}
                             </td>
+                            
                         </tr>
                     {% endfor %}
                 </tbody>

@@ -56,9 +56,9 @@ def delete_table(request, id):
 
 def table_details(request, id):
     table = get_object_or_404(Table, id=id)
-    orders = Order.objects.filter(table=table)
-    order_items = OrderItem.objects.filter(order__in=orders)
-    return render(request, 'table_details.html', {'orders': orders, 'order_items': order_items})
+    orders = Order.objects.filter(table=table).prefetch_related('order_items__item')  # Optimize queries
+    return render(request, 'table_details.html', {'orders': orders})
+
 
 def menu(request):
     if request.method == 'POST':
