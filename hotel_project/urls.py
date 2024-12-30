@@ -15,6 +15,7 @@ urlpatterns = [
     path('menu/', menu, name='menu'),
     path('main/', customer_main, name='customer_main'),
     path(" ", qr_code_login, name='qr_code_login'),
+    path('cart/', cart, name='cart'),
 ]
 
 if settings.DEBUG:

@@ -32,10 +32,10 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://f245-49-36-217-109.ngrok-free.app'
+    'https://0f00-49-36-217-109.ngrok-free.app'
 ]
 
-BASE_URL = 'https://f245-49-36-217-109.ngrok-free.app'
+BASE_URL = 'https://0f00-49-36-217-109.ngrok-free.app'
 
 
 # Application definition

@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from .models import *
 from .forms import *
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.hashers import check_password, make_password
 import os
 import logging
@@ -30,11 +31,18 @@ def customer_login(request):
     return render(request, 'customer_login.html')
 
 def qr_code_login(request):
-    table = None
+    table = None  # Initialize table to avoid UnboundLocalError
+
+    # Get table_id from the GET parameters
     table_id = request.GET.get('table_id')
     if table_id:
-        table = get_object_or_404(Table, id=table_id)
-        request.session['table_id'] = table_id  # Store table_id in session for later use
+        try:
+            # Attempt to retrieve the table using the table_id
+            table = get_object_or_404(Table, id=table_id)
+            # Store table_id in session for later use
+            request.session['table_id'] = table_id
+        except Table.DoesNotExist:
+            return HttpResponse("Table not found")
 
     if request.method == 'POST':
         username = request.POST.get("username")
@@ -42,17 +50,19 @@ def qr_code_login(request):
         try:
             customer = Customer.objects.get(username=username)
             if check_password(password, customer.password):
+                # Save customer data in the session
                 request.session['customer_id'] = customer.id
                 request.session['customer_role'] = customer.role
-                # Record the scan information
-                if 'table_id' in request.session:
-                    table_id = request.session['table_id']
-                    table = get_object_or_404(Table, id=table_id)
+
+                # Record the scan if a table is associated
+                if table:
                     ScanRecord.objects.create(
                         customer=customer,
                         table=table,
                         scanned_at=timezone.now()
                     )
+
+                # Redirect to the main customer page
                 return redirect('customer_main')
             else:
                 return HttpResponse("Invalid credentials")
@@ -60,6 +70,7 @@ def qr_code_login(request):
             return HttpResponse("User does not exist")
 
     return render(request, 'qr_code_login.html')
+
 
 def dashboard(request):
     return render(request, 'dashboard.html')
@@ -107,11 +118,15 @@ def customer_main(request):
     if request.method == 'POST':
         item_id = request.POST.get('item_id')
         quantity = int(request.POST.get('quantity', 1))
-        item = Items.objects.get(item_id=item_id)
+        item = Items.objects.get(id=item_id)
 
-        table = Table.objects.first()  # Replace with appropriate logic
-        order, created = Order.objects.get_or_create(customer_name=request.user.username, table=table)
-
+        customer_id = request.session.get('customer_id')
+        customer = get_object_or_404(Customer, id=customer_id)
+        table = Table.objects.first()  # Replace with appropriate logic if necessary
+        
+        # Set customer_name to the logged-in customer's username
+        order, created = Order.objects.get_or_create(customer_name=customer.username, table=table)
+        
         order_item, created = OrderItem.objects.get_or_create(order=order, item=item, defaults={'quantity': quantity})
         if not created:
             order_item.quantity += quantity
@@ -121,3 +136,17 @@ def customer_main(request):
 
     items = Items.objects.all()
     return render(request, 'customer_main.html', {'items': items})
+
+
+def cart(request):
+    # Retrieve the table and customer from the session
+    table_id = request.session.get('table_id')
+    table = get_object_or_404(Table, id=table_id)
+
+    customer_id = request.session.get('customer_id')
+
+    # Get the active order for the customer and table
+    orders = Order.objects.filter(customer_name=customer_id, table=table)
+
+    # Pass the orders to the template
+    return render(request, 'cart.html', {'orders': orders})
