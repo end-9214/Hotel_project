@@ -16,6 +16,8 @@ urlpatterns = [
     path('main/', customer_main, name='customer_main'),
     path(" ", qr_code_login, name='qr_code_login'),
     path('cart/', cart, name='cart'),
+    path('cart_update_item/', cart_update_item, name='cart_update_item'),
+    path('finalize_order/<int:order_id>/', finalize_order, name='finalize_order'),
 ]
 
 if settings.DEBUG:

@@ -2,11 +2,11 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from .models import *
 from .forms import *
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.hashers import check_password
 import os
 import logging
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ def customer_login(request):
             return HttpResponse("User does not exist")
 
     return render(request, 'customer_login.html')
+
 
 def qr_code_login(request):
     table = None  # Initialize table to avoid UnboundLocalError
@@ -75,6 +76,7 @@ def qr_code_login(request):
 def dashboard(request):
     return render(request, 'dashboard.html')
 
+
 def tables(request):
     if request.method == 'POST':
         form = TableForm(request.POST)
@@ -83,8 +85,9 @@ def tables(request):
             return redirect('tables')
     else:
         form = TableForm()
-    tables = Table.objects.all()
-    return render(request, 'tables.html', {'form': form, 'tables': tables})
+    tables_list = Table.objects.all()
+    return render(request, 'tables.html', {'form': form, 'tables': tables_list})
+
 
 def delete_table(request, id):
     if request.method == 'POST':
@@ -98,10 +101,12 @@ def delete_table(request, id):
         return redirect('tables')
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+
 def table_details(request, id):
     table = get_object_or_404(Table, id=id)
-    orders = Order.objects.filter(table=table).prefetch_related('order_items__item')  # Optimize queries
+    orders = Order.objects.filter(table=table).prefetch_related('order_items__item')
     return render(request, 'table_details.html', {'orders': orders})
+
 
 def menu(request):
     if request.method == 'POST':
@@ -114,28 +119,41 @@ def menu(request):
     items = Items.objects.all()
     return render(request, 'menu.html', {'form': form, 'items': items})
 
+
 def customer_main(request):
     if request.method == 'POST':
+        # Use item_id for Items since that's the primary key
         item_id = request.POST.get('item_id')
         quantity = int(request.POST.get('quantity', 1))
-        item = Items.objects.get(id=item_id)
+        item = Items.objects.get(item_id=item_id)
 
+        # Retrieve the logged-in customer
         customer_id = request.session.get('customer_id')
         customer = get_object_or_404(Customer, id=customer_id)
-        table = Table.objects.first()  # Replace with appropriate logic if necessary
-        
-        # Set customer_name to the logged-in customer's username
-        order, created = Order.objects.get_or_create(customer_name=customer.username, table=table)
-        
-        order_item, created = OrderItem.objects.get_or_create(order=order, item=item, defaults={'quantity': quantity})
-        if not created:
+
+        # You can customize table logic as needed
+        table = Table.objects.first()
+
+        # Create or get an Order with the customer/table
+        order, created = Order.objects.get_or_create(
+            customer=customer,
+            table=table
+        )
+
+        # Create or update the corresponding OrderItem
+        order_item, oi_created = OrderItem.objects.get_or_create(
+            order=order,
+            item=item,
+            defaults={'quantity': quantity}
+        )
+        if not oi_created:
             order_item.quantity += quantity
             order_item.save()
 
         return redirect('customer_main')
 
-    items = Items.objects.all()
-    return render(request, 'customer_main.html', {'items': items})
+    items_list = Items.objects.all()
+    return render(request, 'customer_main.html', {'items': items_list})
 
 
 def cart(request):
@@ -144,9 +162,40 @@ def cart(request):
     table = get_object_or_404(Table, id=table_id)
 
     customer_id = request.session.get('customer_id')
+    customer = get_object_or_404(Customer, id=customer_id)
 
-    # Get the active order for the customer and table
-    orders = Order.objects.filter(customer_name=customer_id, table=table)
-
-    # Pass the orders to the template
+    # Filter the orders by the customer/table
+    orders = Order.objects.filter(customer=customer, table=table)
     return render(request, 'cart.html', {'orders': orders})
+
+@require_POST
+def cart_update_item(request):
+    order_item_id = request.POST.get('order_item_id')
+    action = request.POST.get('action')
+
+    order_item = get_object_or_404(OrderItem, id=order_item_id)
+
+    if action == 'increment':
+        order_item.quantity += 1
+    elif action == 'decrement' and order_item.quantity > 1:
+        order_item.quantity -= 1
+
+    order_item.save()
+
+    # Redirect back to cart page
+    return redirect('cart')
+
+def finalize_order(request, order_id):
+    """
+    Finalizes the order with the given order_id. 
+    You can perform payment processing, order confirmation, etc.
+    """
+    from django.shortcuts import get_object_or_404, redirect
+    order = get_object_or_404(Order, id=order_id)
+
+    # Example logic: mark order as finalized or do some other processing
+    # order.finalized = True
+    # order.save()
+
+    # Redirect to a confirmation page or wherever needed
+    return redirect('cart')

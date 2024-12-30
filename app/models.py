@@ -6,7 +6,6 @@ import qrcode
 from io import BytesIO
 from django.core.files import File
 
-# Customer Model
 class Customer(models.Model):
     ROLES = [
         ('Customer', 'Customer'),
@@ -22,7 +21,7 @@ class Customer(models.Model):
     def __str__(self):
         return self.username
 
-# Table Model
+
 class Table(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     qr_code = models.ImageField(upload_to='qr_codes', blank=True)
@@ -41,7 +40,7 @@ class Table(models.Model):
     def __str__(self):
         return f"Table {self.id}"
 
-# Items Model
+
 class Items(models.Model):
     item_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
@@ -52,19 +51,19 @@ class Items(models.Model):
     def __str__(self):
         return self.name
 
-# Order Model
+
 class Order(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True)  # No need for default=None
-    table = models.ForeignKey(Table, on_delete=models.CASCADE, null=True)  # Table is mandatory now
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True)
+    table = models.ForeignKey(Table, on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self):
         return f"Order {self.id} for {self.customer.username}"
 
-# OrderItem Model
+
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, related_name='order_items', on_delete=models.CASCADE, null=True)  # No need for default=None
-    item = models.ForeignKey(Items, on_delete=models.CASCADE, null=True)  # No need for default=None
+    order = models.ForeignKey(Order, related_name='order_items', on_delete=models.CASCADE, null=True)
+    item = models.ForeignKey(Items, on_delete=models.CASCADE, null=True)
     quantity = models.PositiveIntegerField(default=1)
 
     @property
@@ -74,7 +73,7 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.item.name} x {self.quantity}"
 
-# ScanRecord Model
+
 class ScanRecord(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True)
     table = models.ForeignKey(Table, on_delete=models.CASCADE, null=True)
