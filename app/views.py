@@ -157,32 +157,48 @@ def customer_main(request):
 
 
 def cart(request):
-    # Retrieve the table and customer from the session
+    from django.shortcuts import get_object_or_404
     table_id = request.session.get('table_id')
     table = get_object_or_404(Table, id=table_id)
 
     customer_id = request.session.get('customer_id')
     customer = get_object_or_404(Customer, id=customer_id)
 
-    # Filter the orders by the customer/table
-    orders = Order.objects.filter(customer=customer, table=table)
-    return render(request, 'cart.html', {'orders': orders})
+    orders = Order.objects.filter(customer=customer, table=table).prefetch_related('order_items__item')
+
+    # Compute total in Python
+    total_due = 0
+    for order in orders:
+        for item in order.order_items.all():
+            total_due += item.total_price
+
+    return render(request, 'cart.html', {
+        'orders': orders,
+        'total_due': total_due,
+    })
+
 
 @require_POST
 def cart_update_item(request):
+    from django.shortcuts import redirect, get_object_or_404
+    from .models import OrderItem
+
     order_item_id = request.POST.get('order_item_id')
-    action = request.POST.get('action')
+    action = request.POST.get('action', '')
 
     order_item = get_object_or_404(OrderItem, id=order_item_id)
 
     if action == 'increment':
         order_item.quantity += 1
-    elif action == 'decrement' and order_item.quantity > 1:
-        order_item.quantity -= 1
+        order_item.save()
+    elif action == 'decrement':
+        # If more than 1, decrement. Otherwise, delete the item.
+        if order_item.quantity > 1:
+            order_item.quantity -= 1
+            order_item.save()
+        else:
+            order_item.delete()
 
-    order_item.save()
-
-    # Redirect back to cart page
     return redirect('cart')
 
 def finalize_order(request, order_id):

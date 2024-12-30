@@ -55,12 +55,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #444;
-            padding: 10px 0;
-        }
-
-        .order-item:last-child {
-            border-bottom: none;
+            background-color: #2e0269;
+            border: 1px solid #6f42c1;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);
         }
 
         .order-details {
@@ -92,6 +92,7 @@
 
         .price-details {
             text-align: right;
+            font-size: 1.2rem;
         }
 
         .checkout-btn {
@@ -132,7 +133,9 @@
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="#">Your Cart</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+                    aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -143,7 +146,8 @@
                     <li class="nav-item">
                         <form method="POST" action="{% url 'logout' %}" class="d-inline">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-link nav-link" style="display:inline;padding:0;border:none;background:none;">
+                            <button type="submit" class="btn btn-link nav-link"
+                                    style="display:inline;padding:0;border:none;background:none;">
                                 Logout
                             </button>
                         </form>
@@ -158,41 +162,47 @@
         <div class="cart-container">
             <h1 class="cart-title">Your Cart</h1>
 
+            <!-- Loop through each active Order -->
             {% for order in orders %}
                 <div class="mb-4">
-                    {% for order_item in order.order_items.all %}
-                    <div class="order-item">
-                        <div class="order-details">
-                            <div><strong>{{ order_item.item.name }}</strong></div>
-                            <div>Rate: ₹{{ order_item.item.price }}</div>
-                            <div>Quantity: {{ order_item.quantity }}</div>
-                        </div>
-                        <div class="price-details">
-                            <div>₹{{ order_item.total_price }}</div>
-                        </div>
-                        <div class="order-actions">
-                            <!-- Decrease Quantity -->
-                            <form method="POST" action="{% url 'cart_update_item' %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="order_item_id" value="{{ order_item.id }}">
-                                <input type="hidden" name="action" value="decrement">
-                                <button type="submit" class="btn-action">-</button>
-                            </form>
+                    {% with 0 as order_total %}
+                        {% for order_item in order.order_items.all %}
+                            <div class="order-item">
+                                <div class="order-details">
+                                    <div><strong>{{ order_item.item.name }}</strong></div>
+                                    <div>Rate: ₹{{ order_item.item.price }}</div>
+                                    <div>Quantity: {{ order_item.quantity }}</div>
+                                </div>
+                                <div class="price-details">
+                                    ₹{{ order_item.total_price }}
+                                </div>
+                                <div class="order-actions">
+                                    <!-- Decrease Quantity -->
+                                    <form method="POST" action="{% url 'cart_update_item' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="order_item_id" value="{{ order_item.id }}">
+                                        <input type="hidden" name="action" value="decrement">
+                                        <button type="submit" class="btn-action">-</button>
+                                    </form>
 
-                            <!-- Increase Quantity -->
-                            <form method="POST" action="{% url 'cart_update_item' %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="order_item_id" value="{{ order_item.id }}">
-                                <input type="hidden" name="action" value="increment">
-                                <button type="submit" class="btn-action">+</button>
-                            </form>
+                                    <!-- Increase Quantity -->
+                                    <form method="POST" action="{% url 'cart_update_item' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="order_item_id" value="{{ order_item.id }}">
+                                        <input type="hidden" name="action" value="increment">
+                                        <button type="submit" class="btn-action">+</button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        <hr>
+                        <div class="text-end" style="font-size: 1.2rem; font-weight: bold;">
+                            Grand Total: ₹{{ total_due }}
                         </div>
-                    </div>
-                    {% endfor %}
+                        <button class="checkout-btn">Proceed to Checkout</button>
+                    {% endwith %}
                 </div>
             {% endfor %}
-
-            <button class="checkout-btn">Proceed to Checkout</button>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
